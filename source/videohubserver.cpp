@@ -1,5 +1,6 @@
 #include "videohubserver.h"
 #include <QNetworkInterface>
+#include <string>
 
 VideoHubServer::VideoHubServer(VideoHubServer::VideoHubDeviceType deviceType, const unsigned int outputCount, const unsigned int inputCount, const unsigned short port, QObject *parent)
     : QObject(parent), m_inputLabels(inputCount), m_outputLabels(outputCount), m_routing(outputCount), m_outputLocks(outputCount)
@@ -44,13 +45,14 @@ void VideoHubServer::start()
 {
     m_server.listen(QHostAddress::Any, m_port);
 
-    QString mac = getMacAddress();
+    std::string mac = getMacAddress().toStdString();
     if (mac.length() == 0) {
         m_uniqueId = "a1b2c3d4e5f6";
     } else {
         QByteArray filtered;
         for (int i = 0; i < mac.length(); i++) {
             if (mac.at(i) != ':') {
+
                 filtered.append(mac.at(i));
             }
         }
@@ -416,7 +418,7 @@ VideoHubServer::ProcessStatus VideoHubServer::processMessage(QList<QByteArray> &
     } else if (header.startsWith("VIDEO OUTPUT LOCKS:")) {
 
         if (message.length() == 0)
-            return VideoHubServer::PS_RoutingDump;
+            return VideoHubServer::PS_LockDump;
 
         Q_FOREACH(QByteArray line, message) {
             int index = line.indexOf(' ');
